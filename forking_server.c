@@ -20,13 +20,17 @@ int main() {
 
     int child = fork();
     if(child == 0){
+
       /* Child process as subserver */
       subserver(fdWKP);
       exit(0);
     } else {
-      /* Parent needs not do anything */
+
+      // Close well known pipe
+      close(fdWKP);      
     }
   }
+
   return 0;
 }
 
@@ -36,14 +40,25 @@ void subserver(int from_client) {
   int to_client = server_connect(from_client);  
 
   /* Subserver operation */
-  char response[256];
-  while(read(from_client, response, sizeof(response))){    
-    process(response); // CURRENTLY DOES NOTHING
-    write(to_client, response, sizeof(response));
-    printf("[subserver %d] Sent modified text\n", getpid());
+  char response[BUFFER_SIZE];  
+  
+  while(read(from_client, response, BUFFER_SIZE)){
+    process(response);
+    write(to_client, response, BUFFER_SIZE);
+    printf("[subserver %d]: Sent modified text: [%s]\n", getpid(), response);    
   }
 }
 
+/* Reverses the string s */
 void process(char *s) {
-  s = s;
+  int a = strlen(s) - 1, b=0;
+
+  char c;
+
+  while(a > b){
+    c = s[a];
+    s[a] = s[b];
+    s[b] = c;
+    a--; b++;
+  }
 }
